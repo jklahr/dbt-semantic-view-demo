@@ -86,7 +86,10 @@ METRICS (
     WITH SYNONYMS ('discounts given'),
 
   orders.avg_order_value AS AVG(net_amount)
-    WITH SYNONYMS ('AOV', 'average order')
+    WITH SYNONYMS ('AOV', 'average order'),
+
+  orders.discount_rate AS DIV0(SUM(discount_amount), SUM(net_amount))
+    WITH SYNONYMS ('discount rate', 'discount percentage')
 )
 
 COMMENT = 'Sales analytics semantic view for e-commerce data. Covers revenue, orders, and product performance across customers and time.'
