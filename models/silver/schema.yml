@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: order_summary
+    description: Denormalized order facts joined with customer and product dimensions
+    columns:
+      - name: order_id
+        description: Unique order identifier
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+      - name: net_amount
+        tests:
+          - not_null

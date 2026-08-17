@@ -1,0 +1,6 @@
+customer_id,customer_name,email,segment,region,created_at
+1,Acme Corp,acme@example.com,Enterprise,US-West,2023-01-15
+2,Beta LLC,beta@example.com,Mid-Market,US-East,2023-02-20
+3,Gamma Inc,gamma@example.com,SMB,EU-West,2023-03-10
+4,Delta Co,delta@example.com,Enterprise,US-East,2023-04-01
+5,Epsilon Ltd,epsilon@example.com,Mid-Market,APAC,2023-05-12

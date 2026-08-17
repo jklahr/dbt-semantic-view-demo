@@ -1,0 +1,18 @@
+ecom_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      database: SEMANTIC_SKILLS
+      schema: DBT_SV_DEV
+      role: ACCOUNTADMIN
+      warehouse: JKLAHR
+      threads: 4
+
+    prod:
+      type: snowflake
+      database: SEMANTIC_SKILLS
+      schema: DBT_SV
+      role: ACCOUNTADMIN
+      warehouse: JKLAHR
+      threads: 4

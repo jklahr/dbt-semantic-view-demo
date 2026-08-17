@@ -1,0 +1,28 @@
+name: 'ecom_analytics'
+version: '1.0.0'
+
+profile: 'ecom_analytics'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+seeds:
+  ecom_analytics:
+    +schema: raw
+
+models:
+  ecom_analytics:
+    staging:
+      +schema: staging
+      +materialized: view
+    silver:
+      +schema: analytics
+      +materialized: table
+    semantic:
+      +schema: analytics

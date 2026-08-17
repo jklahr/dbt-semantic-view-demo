@@ -1,0 +1,94 @@
+# CI/CD for dbt Projects on Snowflake
+# - On PR: validate models compile and tests pass in dev environment
+# - On merge to main: deploy to production
+#
+# Prerequisites:
+# 1. Configure OIDC trust between GitHub Actions and Snowflake
+#    See: https://docs.snowflake.com/user-guide/tutorials/dbt-projects-on-snowflake-ci-cd-tutorial
+# 2. Set repository secrets: SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER
+# 3. Set up the dev/prod databases and roles in Snowflake
+
+name: dbt CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['models/**', 'seeds/**', 'tests/**', 'dbt_project.yml', 'packages.yml']
+  push:
+    branches: [main]
+    paths: ['models/**', 'seeds/**', 'tests/**', 'dbt_project.yml', 'packages.yml']
+
+env:
+  SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+  SNOWFLAKE_AUTHENTICATOR: oauth
+  SNOWFLAKE_DATABASE_DEV: DBT_ECOM_DEV
+  SNOWFLAKE_DATABASE_PROD: DBT_ECOM_PROD
+  SNOWFLAKE_WAREHOUSE: CI_WH
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────
+  # PR Validation: build + test against dev
+  # ─────────────────────────────────────────────
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Snowflake CLI
+        uses: Snowflake-Labs/snowflake-cli-action@v1
+
+      - name: Authenticate with Snowflake (OIDC)
+        uses: Snowflake-Labs/snowflake-cli-action@v1
+        with:
+          cli-input: connection test
+
+      - name: Install dbt dependencies
+        run: snow dbt execute --command "deps" --target dev
+
+      - name: Seed test data
+        run: snow dbt execute --command "seed" --target dev
+
+      - name: Build models + run tests
+        run: snow dbt execute --command "build" --target dev
+
+      - name: Run unit tests
+        run: snow dbt execute --command "test --select test_type:unit" --target dev
+
+  # ─────────────────────────────────────────────
+  # Production Deploy: on merge to main
+  # ─────────────────────────────────────────────
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Snowflake CLI
+        uses: Snowflake-Labs/snowflake-cli-action@v1
+
+      - name: Authenticate with Snowflake (OIDC)
+        uses: Snowflake-Labs/snowflake-cli-action@v1
+        with:
+          cli-input: connection test
+
+      - name: Deploy dbt project object
+        run: |
+          snow dbt deploy \
+            --project-name ecom_analytics \
+            --target prod
+
+      - name: Execute production build
+        run: |
+          snow dbt execute \
+            --project-name ecom_analytics \
+            --command "build" \
+            --target prod
+
+      - name: Verify semantic view exists
+        run: |
+          snow sql -q "SHOW SEMANTIC VIEWS IN SCHEMA DBT_ECOM_PROD.PUBLIC_ANALYTICS;"
