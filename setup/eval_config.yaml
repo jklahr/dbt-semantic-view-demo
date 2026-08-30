@@ -1,0 +1,42 @@
+# =============================================================================
+# EVAL CONFIG: Sales Analytics Agent
+# Defines which agent to evaluate, the dataset to use, and metrics to compute.
+# Upload to a stage and reference in EXECUTE_AI_EVALUATION.
+# =============================================================================
+
+evaluation:
+  agent_params:
+    agent_name: SEMANTIC_SKILLS.DBT_SV_ANALYTICS.SALES_ANALYTICS_AGENT
+    agent_type: CORTEX AGENT
+  run_params:
+    label: Sales Analytics Agent Evaluation
+    description: Evaluates the sales analytics agent across revenue, orders, and product metrics
+  source_metadata:
+    type: dataset
+    dataset_name: SEMANTIC_SKILLS.DBT_SV_ANALYTICS.SALES_AGENT_EVALSET
+
+metrics:
+  - correctness
+  - logical_consistency
+  - name: groundedness
+    score_ranges:
+      min_score: [0, 0.33]
+      median_score: [0.34, 0.66]
+      max_score: [0.67, 1]
+    prompt: |
+      You are evaluating whether an AI agent's response is grounded in the data
+      it retrieved from its tools.
+
+      User Query: {{input}}
+      Agent Response: {{output}}
+      Expected Answer: {{ground_truth}}
+
+      Evaluate:
+      1. Does the response contain specific numbers that match what was retrieved from tools?
+      2. Are all claims in the response traceable to tool outputs in the execution trace?
+      3. Does the response avoid fabricating data not present in tool results?
+
+      Score from 0 to 1:
+      - 1.0: Every claim is directly supported by tool output data
+      - 0.5: Most claims supported but some minor details not verifiable
+      - 0.0: Response contains fabricated numbers or unsupported claims
