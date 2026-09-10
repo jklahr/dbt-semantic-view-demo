@@ -1,0 +1,32 @@
+# =============================================================================
+# EVAL CONFIG: Sales Analytics Agent
+#
+# Upload to a stage, then reference the staged path in EXECUTE_AI_EVALUATION.
+#
+# NOTE ON STRUCTURE: `metrics` is a TOP-LEVEL key, a sibling of `evaluation` —
+# not nested inside it. Nesting it raises:
+#   Unrecognized field "metrics" ... at path: evaluation -> metrics
+#
+# NOTE ON METRIC NAMES: the correctness metric is `answer_correctness`.
+# Plain `correctness` is not recognized.
+# =============================================================================
+
+evaluation:
+  agent_params:
+    agent_name: SEMANTIC_SKILLS.DBT_SV_ANALYTICS.SALES_ANALYTICS_AGENT
+    agent_type: CORTEX AGENT
+    # Pin a committed version (e.g. VERSION$2) for runs you want to compare
+    # over time; the live version is mutable and can drift between runs.
+  run_params:
+    label: Sales Analytics Agent Evaluation
+    description: Evaluates the sales analytics agent across revenue, orders, and product metrics
+  source_metadata:
+    type: dataset
+    dataset_name: SEMANTIC_SKILLS.DBT_SV_ANALYTICS.SALES_AGENT_EVALSET
+
+metrics:
+  # Ground-truth metric: does the answer match ground_truth_output?
+  - answer_correctness
+  # Reference-free metric: are the agent's plan, tool calls, and instructions
+  # mutually consistent?
+  - logical_consistency
